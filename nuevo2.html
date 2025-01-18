@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sorteo de Champions League</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 900px;
+            margin: 20px auto;
+            background-color: #e3f2fd;
+            border: 2px solid #2196f3;
+            border-radius: 8px;
+            padding: 20px;
+        }
+        h2 {
+            text-align: center;
+            color: #1565c0;
+        }
+        .group {
+            margin-bottom: 20px;
+        }
+        .group h3 {
+            text-align: center;
+            color: #0d47a1;
+            margin-bottom: 10px;
+        }
+        .group-inputs {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+        .group-inputs input {
+            width: calc(25% - 10px);
+            padding: 8px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+        .btn-container {
+            text-align: center;
+        }
+        .btn {
+            padding: 10px 20px;
+            background-color: #2196f3;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .btn:hover {
+            background-color: #1976d2;
+        }
+        .results {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #c8e6c9;
+            border: 1px solid #388e3c;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .results h4 {
+            margin-top: 0;
+            color: #1b5e20;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        table, th, td {
+            border: 1px solid #388e3c;
+        }
+        th, td {
+            text-align: left;
+            padding: 8px;
+        }
+        th {
+            background-color: #66bb6a;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Sorteo como el nuuevo formato de Champions League</h2>
+
+        <!-- Grupos -->
+        <div id="groups">
+            <!-- Grupos dinámicos generados por JavaScript -->
+        </div>
+
+        <!-- Botón de sorteo -->
+        <div class="btn-container">
+            <button class="btn" id="drawButton">Realizar Sorteo</button>
+        </div>
+
+        <!-- Resultados -->
+        <div class="results" id="results" style="display: none;">
+            <h4>Resultados del Sorteo:</h4>
+            <table id="resultsTable">
+                <thead>
+                    <tr>
+                        <th>Equipo</th>
+                        <th>Enfrentamiento 1</th>
+                        <th>Enfrentamiento 2</th>
+                        <th>Enfrentamiento 3</th>
+                        <th>Enfrentamiento 4</th>
+                        <th>Enfrentamiento 5</th>
+                        <th>Enfrentamiento 6</th>
+                        <th>Enfrentamiento 7</th>
+                        <th>Enfrentamiento 8</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Contenido dinámico -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        const totalTeams = 36;
+        const groupsCount = 4;
+        const teamsPerGroup = totalTeams / groupsCount;
+
+        // Crear los grupos dinámicamente
+        const groupsContainer = document.getElementById("groups");
+        const groups = [];
+        for (let groupIndex = 1; groupIndex <= groupsCount; groupIndex++) {
+            const groupDiv = document.createElement("div");
+            groupDiv.classList.add("group");
+
+            const groupTitle = document.createElement("h3");
+            groupTitle.textContent = `Grupo ${groupIndex}`;
+            groupDiv.appendChild(groupTitle);
+
+            const inputsDiv = document.createElement("div");
+            inputsDiv.classList.add("group-inputs");
+
+            const group = [];
+            for (let i = 1; i <= teamsPerGroup; i++) {
+                const input = document.createElement("input");
+                input.type = "text";
+                input.placeholder = `Equipo ${(groupIndex - 1) * teamsPerGroup + i}`;
+                inputsDiv.appendChild(input);
+                group.push(input);
+            }
+
+            groupDiv.appendChild(inputsDiv);
+            groupsContainer.appendChild(groupDiv);
+            groups.push(group);
+        }
+
+        // Realizar el sorteo
+        const drawButton = document.getElementById("drawButton");
+        const resultsContainer = document.getElementById("results");
+        const resultsTableBody = document.querySelector("#resultsTable tbody");
+
+        drawButton.addEventListener("click", () => {
+            const allTeams = groups.flat().map(input => input.value.trim()).filter(Boolean);
+
+            if (allTeams.length !== totalTeams) {
+                alert("Por favor, completa los nombres de todos los equipos.");
+                return;
+            }
+
+            const matches = {};
+            groups.flat().forEach(input => {
+                const team = input.value.trim();
+                matches[team] = [];
+            });
+
+            groups.flat().forEach((input, index) => {
+                const team = input.value.trim();
+                const groupIndex = Math.floor(index / teamsPerGroup);
+
+                for (let i = 0; i < groupsCount; i++) {
+                    const targetGroupIndex = (groupIndex + i) % groupsCount;
+                    const targetGroup = groups[targetGroupIndex].map(input => input.value.trim());
+                    let count = 0;
+
+                    while (count < 2) {
+                        const opponent = targetGroup[Math.floor(Math.random() * targetGroup.length)];
+                        if (
+                            opponent !== team &&
+                            matches[team].filter(match => match.name === opponent).length < 1
+                        ) {
+                            matches[team].push({ name: opponent, group: targetGroupIndex + 1 });
+                            matches[opponent].push({ name: team, group: groupIndex + 1 });
+                            count++;
+                        }
+                    }
+                }
+            });
+
+            // Mostrar resultados en tabla
+            resultsTableBody.innerHTML = "";
+            Object.entries(matches).forEach(([team, opponents]) => {
+                const row = document.createElement("tr");
+                const teamCell = document.createElement("td");
+                teamCell.textContent = team;
+                row.appendChild(teamCell);
+
+                opponents.forEach(opponent => {
+                    const opponentCell = document.createElement("td");
+                    opponentCell.textContent = `${opponent.name} (G${opponent.group})`;
+                    row.appendChild(opponentCell);
+                });
+
+                resultsTableBody.appendChild(row);
+            });
+
+            resultsContainer.style.display = "block";
+        });
+    </script>
+</body>
+</html>
